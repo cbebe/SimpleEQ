@@ -165,7 +165,8 @@ bool SimpleEQAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor *SimpleEQAudioProcessor::createEditor()
 {
-  return new SimpleEQAudioProcessorEditor(*this);
+  return new juce::GenericAudioProcessorEditor(*this);
+  // return new SimpleEQAudioProcessorEditor(*this);
 }
 
 //==============================================================================
@@ -180,6 +181,52 @@ void SimpleEQAudioProcessor::setStateInformation(const void *data, int sizeInByt
 {
   // You should use this method to restore your parameters from this memory block,
   // whose contents will have been created by the getStateInformation() call.
+}
+
+juce::StringArray createFilterChoices()
+{
+  juce::StringArray stringArray;
+  for (int i = 0; i < 4; ++i)
+  {
+    juce::String str;
+    str << (i + 1) * 12;
+    str << " db/Oct";
+    stringArray.add(str);
+  }
+  return stringArray;
+}
+
+juce::AudioProcessorValueTreeState::ParameterLayout SimpleEQAudioProcessor::createParameterLayout()
+{
+  juce::AudioProcessorValueTreeState::ParameterLayout layout;
+  using ParamFloat = juce::AudioParameterFloat;
+  using ParamChoice = juce::AudioParameterChoice;
+  using Range = juce::NormalisableRange<float>;
+
+  auto MIN_FREQ = 20.f;
+  auto MAX_FREQ = 20000.f;
+
+  auto fullFreqRange = Range(MIN_FREQ, MAX_FREQ, 1.f, 1.f);
+
+  // Add audio parameters
+
+  layout.add(std::make_unique<ParamFloat>(LOW_CUT_FREQ, LOW_CUT_FREQ, fullFreqRange, MIN_FREQ));
+
+  layout.add(std::make_unique<ParamFloat>(HIGH_CUT_FREQ, HIGH_CUT_FREQ, fullFreqRange, MAX_FREQ));
+
+  layout.add(std::make_unique<ParamFloat>(PEAK_FREQ, PEAK_FREQ, fullFreqRange, 750.f));
+
+  layout.add(std::make_unique<ParamFloat>(PEAK_GAIN, PEAK_GAIN, Range(-24.f, 24.f, 0.5f, 1.f), 0.f));
+
+  layout.add(std::make_unique<ParamFloat>(PEAK_QUALITY, PEAK_QUALITY, Range(0.1f, 10.f, 0.05f, 1.f), 1.f));
+
+  // Add filter choices
+  auto stringArray = createFilterChoices();
+
+  layout.add(std::make_unique<ParamChoice>(LOW_CUT_SLOPE, LOW_CUT_SLOPE, stringArray, 0));
+  layout.add(std::make_unique<ParamChoice>(HIGH_CUT_SLOPE, HIGH_CUT_SLOPE, stringArray, 0));
+
+  return layout;
 }
 
 //==============================================================================
