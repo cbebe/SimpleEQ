@@ -1,4 +1,4 @@
 JuceLibraryCode
-Builds
-
 .vscode
+
+Builds/**/build
